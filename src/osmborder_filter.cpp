@@ -169,42 +169,12 @@ int main(int argc, char* argv[]) {
             }
 
         }
-        /*
-        {
-            osmium::io::Reader reader{infile, osmium::osm_entity_bits::way};
-            auto ways = osmium::io::make_input_iterator_range<const osmium::Way>(reader);
 
-            auto first = way_ids.begin();
-            auto last = std::unique(way_ids.begin(), way_ids.end());
-
-            std::copy_if(ways.cbegin(), ways.cend(), output_it, [&first, &last](const osmium::Way& way){
-                while (*first < way.id() && first != last) {
-                    ++first;
-                }
-
-                if (way.id() == *first) {
-                    if (first != last) {
-                        for (const auto& nr : way.nodes()) {
-                            node_ids.push_back(nr.ref());
-                        }
-                        //++first;
-                    }
-                    return true;
-                }
-
-                // Also accept ways with admin tags not part of relations
-                return way.tags().has_tag("boundary", "administrative");
-            });
-
-            reader.close();
-        }
-*/
-/*
         vout << "Preparing node ID list...\n";
         std::sort(node_ids.begin(), node_ids.end());
         auto last = std::unique(node_ids.begin(), node_ids.end());
 
-        vout << "Reading nodes (2nd pass through input file)...\n";
+        vout << "Reading nodes (3rd pass through input file)...\n";
         {
             osmium::io::Reader reader{infile, osmium::osm_entity_bits::node};
             auto nodes = osmium::io::make_input_iterator_range<const osmium::Node>(reader);
@@ -215,19 +185,17 @@ int main(int argc, char* argv[]) {
                     ++first;
                 }
 
-                if (node.node_ids() == *first) {
+                if (node.id() == *first) {
                     if (first != last) {
                         ++first;
                     }
                     return true;
                 }
-
-                return node.tags().has_tag("natural", "coastline");
             });
 
             reader.close();
         }
-*/
+
         writer.close();
     } catch (const osmium::io_error& e) {
         std::cerr << "io error: " << e.what() << "'\n";
