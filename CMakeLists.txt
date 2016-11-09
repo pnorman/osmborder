@@ -43,6 +43,16 @@ include_directories(include)
 find_package(Osmium 2.5.0 COMPONENTS io)
 include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
+if(MSVC)
+    find_path(GETOPT_INCLUDE_DIR getopt.h)
+    find_library(GETOPT_LIBRARY NAMES wingetopt)
+    if(GETOPT_INCLUDE_DIR AND GETOPT_LIBRARY)
+        include_directories(${GETOPT_INCLUDE_DIR})
+    else()
+        set(GETOPT_MISSING 1)
+    endif()
+endif()
+
 #-----------------------------------------------------------------------------
 #
 #  Decide which C++ version to use (Minimum/default: C++11).
@@ -65,6 +75,17 @@ endif()
 #  Compiler and Linker flags
 #
 #-----------------------------------------------------------------------------
+
+if(MSVC)
+    set(USUAL_COMPILE_OPTIONS "/Ox")
+else()
+    set(USUAL_COMPILE_OPTIONS "-O3 -g")
+endif()
+
+if(WIN32)
+    add_definitions(-DWIN32 -D_WIN32 -DMSWIN32 -DBGDWIN32
+            -DWINVER=0x0500 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0600)
+endif()
 
 set(CMAKE_CXX_FLAGS_DEV "${USUAL_COMPILE_OPTIONS}"
     CACHE STRING "Flags used by the compiler during developer builds."
@@ -158,6 +179,8 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
+
+add_subdirectory(src)
 
 #-----------------------------------------------------------------------------
 #
