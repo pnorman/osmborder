@@ -1,6 +1,7 @@
 /*
 
   Copyright 2012-2016 Jochen Topf <jochen@topf.org>.
+  Copyright 2016 Paul Norman <penorman@mac.com>.
 
   This file is part of OSMBorder, and is based on osmborder_filter.cpp
   from OSMCoastline
