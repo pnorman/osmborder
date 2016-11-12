@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
                 verbose = true;
                 break;
             case 'V':
-                std::cout << "osmborder_filter version " OSMCOASTLINE_VERSION "\n"
+                std::cout << "osmborder_filter version " OSMBORDER_VERSION "\n"
                           << "Copyright (C) 2012-2016  Jochen Topf <jochen@topf.org>\n"
                           << "License: GNU GENERAL PUBLIC LICENSE Version 3 <http://gnu.org/licenses/gpl.html>.\n"
                           << "This is free software: you are free to change and redistribute it.\n"
