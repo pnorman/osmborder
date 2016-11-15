@@ -114,7 +114,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug Release RelWithDebInfo MinSizeRel Dev")
 # In 'Dev' mode: compile with very strict warnings and turn them into errors.
 if(CMAKE_BUILD_TYPE STREQUAL "Dev")
     if(NOT MSVC)
-        add_definitions(-Werror -fno-omit-frame-pointer)
+        add_definitions(-Werror -Wall -fno-omit-frame-pointer)
     endif()
     add_definitions(${OSMIUM_WARNING_OPTIONS})
 endif()
