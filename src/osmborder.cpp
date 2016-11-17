@@ -44,13 +44,13 @@
 #include <osmium/util/verbose_output.hpp>
 #include <osmium/visitor.hpp>
 #include <osmium/area/assembler.hpp>
-#include <osmium/area/multipolygon_collector.hpp>
 
 #include "return_codes.hpp"
 
 #include "options.hpp"
 #include "stats.hpp"
 #include "util.hpp"
+#include "admin_collector.hpp"
 
 // Global debug marker
 bool debug;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     osmium::io::File infile{argv[optind]};
 
     osmium::area::Assembler::config_type assembler_config;
-    osmium::area::MultipolygonCollector<osmium::area::Assembler> collector{assembler_config};
+    AdminCollector<osmium::area::Assembler> collector{assembler_config};
 
     osmium::io::Reader reader1(infile, osmium::osm_entity_bits::relation);
 
