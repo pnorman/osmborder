@@ -43,6 +43,8 @@
 #include <osmium/util/memory.hpp>
 #include <osmium/util/verbose_output.hpp>
 #include <osmium/visitor.hpp>
+#include <osmium/area/assembler.hpp>
+#include <osmium/area/multipolygon_collector.hpp>
 
 #include "return_codes.hpp"
 
@@ -81,6 +83,15 @@ int main(int argc, char *argv[]) {
     osmium::util::VerboseOutput vout(options.verbose);
 
     debug = options.debug;
+
+    osmium::io::File infile{argv[optind]};
+
+    osmium::area::Assembler::config_type assembler_config;
+    osmium::area::MultipolygonCollector<osmium::area::Assembler> collector{assembler_config};
+
+    osmium::io::Reader reader1(infile, osmium::osm_entity_bits::relation);
+
+    collector.read_relations(reader1);
 
     vout << "All done.\n";
     vout << memory_usage();
