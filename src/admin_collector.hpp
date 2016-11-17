@@ -112,24 +112,12 @@ public:
     }
 
     /**
-     * We are interested in all relations tagged with type=multipolygon
-     * or type=boundary.
+     * We are interested in all relations tagged with type=boundary.
      *
      * Overwritten from the base class.
      */
     bool keep_relation(const osmium::Relation& relation) const {
-        const char* type = relation.tags().get_value_by_key("type");
-
-        // ignore relations without "type" tag
-        if (!type) {
-            return false;
-        }
-
-        if ((!std::strcmp(type, "multipolygon")) || (!std::strcmp(type, "boundary"))) {
-            return true;
-        }
-
-        return false;
+        return relation.tags().has_tag("boundary", "administrative");
     }
 
     /**
@@ -140,54 +128,6 @@ public:
         return member.type() == osmium::item_type::way;
     }
 
-    /**
-     * This is called when a way is not in any multipolygon
-     * relation.
-     *
-     * Overwritten from the base class.
-     */
-    void way_not_in_any_relation(const osmium::Way& way) {
-        // you need at least 4 nodes to make up a polygon
-        if (way.nodes().size() <= 3) {
-            return;
-        }
-        try {
-            if (!way.nodes().front().location() || !way.nodes().back().location()) {
-                throw osmium::invalid_location("invalid location");
-            }
-            if (way.ends_have_same_location()) {
-                // way is closed and has enough nodes, build simple multipolygon
-                TAssembler assembler(m_assembler_config);
-                assembler(way, m_output_buffer);
-                m_stats += assembler.stats();
-                possibly_flush_output_buffer();
-            }
-        } catch (const osmium::invalid_location&) {
-            // XXX ignore
-        }
-    }
-
-    void complete_relation(osmium::relations::RelationMeta& relation_meta) {
-        const osmium::Relation& relation = this->get_relation(relation_meta);
-        const osmium::memory::Buffer& buffer = this->members_buffer();
-
-        std::vector<const osmium::Way*> ways;
-        for (const auto& member : relation.members()) {
-            if (member.ref() != 0) {
-                const size_t offset = this->get_offset(member.type(), member.ref());
-                ways.push_back(&buffer.get<const osmium::Way>(offset));
-            }
-        }
-
-        try {
-            TAssembler assembler(m_assembler_config);
-            assembler(relation, ways, m_output_buffer);
-            m_stats += assembler.stats();
-            possibly_flush_output_buffer();
-        } catch (const osmium::invalid_location&) {
-            // XXX ignore
-        }
-    }
 
     void flush() {
         flush_output_buffer();
