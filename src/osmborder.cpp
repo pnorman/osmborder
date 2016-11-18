@@ -69,6 +69,26 @@ std::string memory_usage() {
 
 /* ================================================== */
 
+class AdminHandler : public osmium::handler::Handler {
+public:
+    void node(const osmium::Node& node) {
+        std::cout << 'n' << node.id() << "\n";
+    }
+
+    void way(const osmium::Way& way) {
+        std::cout << 'w' << way.id() << "\n";
+    }
+
+    void area(const osmium::Area& area) {
+        std::cout << 'a' << area.id() << "\n";
+    }
+
+    void relation(const osmium::Relation& relation) {
+        std::cout << 'r' << relation.id() << "\n";
+    }
+
+
+};
 int main(int argc, char *argv[]) {
     Stats stats;
     unsigned int warnings = 0;
@@ -89,9 +109,19 @@ int main(int argc, char *argv[]) {
     osmium::area::Assembler::config_type assembler_config;
     AdminCollector<osmium::area::Assembler> collector{};
 
+    vout << "Reading relations in pass 1.\n";
     osmium::io::Reader reader1(infile, osmium::osm_entity_bits::relation);
-
     collector.read_relations(reader1);
+
+    vout << memory_usage();
+
+    vout << "Reading pass 2.\n";
+    osmium::io::Reader reader2(infile, osmium::osm_entity_bits::way);
+
+    AdminHandler admin_handler;
+
+    osmium::apply(reader2, collector.handler([&admin_handler](osmium::memory::Buffer&& buffer) {
+        osmium::apply(buffer, admin_handler);}));
 
     vout << "All done.\n";
     vout << memory_usage();
