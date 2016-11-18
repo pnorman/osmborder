@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     osmium::io::File infile{argv[optind]};
 
     osmium::area::Assembler::config_type assembler_config;
-    AdminCollector<osmium::area::Assembler> collector{assembler_config};
+    AdminCollector<osmium::area::Assembler> collector{};
 
     osmium::io::Reader reader1(infile, osmium::osm_entity_bits::relation);
 

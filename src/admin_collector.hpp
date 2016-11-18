@@ -74,14 +74,10 @@ class AdminCollector : public osmium::relations::Collector<AdminCollector<TAssem
 
     using collector_type = osmium::relations::Collector<AdminCollector<TAssembler>, false, true, false>;
 
-    using assembler_config_type = typename TAssembler::config_type;
-    const assembler_config_type m_assembler_config;
-
 public:
 
-    explicit AdminCollector(const assembler_config_type& assembler_config) :
-        collector_type(),
-        m_assembler_config(assembler_config) {
+    explicit AdminCollector() :
+        collector_type() {
     }
 
     /**
