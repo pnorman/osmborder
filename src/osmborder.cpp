@@ -19,17 +19,8 @@
 
 */
 
-#include <cassert>
-#include <cerrno>
-#include <cstdlib>
-#include <cstring>
 #include <iostream>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
 #include <string>
-#include <utility>
-#include <vector>
 
 #ifndef _MSC_VER
 # include <unistd.h>
@@ -39,17 +30,20 @@
 
 #include <osmium/io/any_input.hpp>
 #include <osmium/io/file.hpp>
-#include <osmium/osm/entity_bits.hpp>
 #include <osmium/util/memory.hpp>
 #include <osmium/util/verbose_output.hpp>
-#include <osmium/visitor.hpp>
 #include <osmium/area/assembler.hpp>
+#include <osmium/handler.hpp>
+
+namespace osmium { class Area; }
+namespace osmium { class Node; }
+namespace osmium { class Relation; }
+namespace osmium { class Way; }
 
 #include "return_codes.hpp"
 
 #include "options.hpp"
 #include "stats.hpp"
-#include "util.hpp"
 #include "admin_collector.hpp"
 
 // Global debug marker

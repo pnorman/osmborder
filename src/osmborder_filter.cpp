@@ -21,11 +21,8 @@
 
 */
 
-#include <algorithm>
 #include <cstdlib>
-#include <cstring>
 #include <getopt.h>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -36,7 +33,6 @@
 #include <osmium/io/input_iterator.hpp>
 #include <osmium/io/output_iterator.hpp>
 #include <osmium/io/pbf_output.hpp>
-#include <osmium/osm.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/osm/node_ref.hpp>
