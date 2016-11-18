@@ -77,38 +77,11 @@ class AdminCollector : public osmium::relations::Collector<AdminCollector<TAssem
     using assembler_config_type = typename TAssembler::config_type;
     const assembler_config_type m_assembler_config;
 
-    osmium::memory::Buffer m_output_buffer;
-
-    osmium::area::area_stats m_stats;
-
-    static constexpr size_t initial_output_buffer_size = 1024 * 1024;
-    static constexpr size_t max_buffer_size_for_flush = 100 * 1024;
-
-    void flush_output_buffer() {
-        if (this->callback()) {
-            osmium::memory::Buffer buffer(initial_output_buffer_size);
-            using std::swap;
-            swap(buffer, m_output_buffer);
-            this->callback()(std::move(buffer));
-        }
-    }
-
-    void possibly_flush_output_buffer() {
-        if (m_output_buffer.committed() > max_buffer_size_for_flush) {
-            flush_output_buffer();
-        }
-    }
-
 public:
 
     explicit AdminCollector(const assembler_config_type& assembler_config) :
         collector_type(),
-        m_assembler_config(assembler_config),
-        m_output_buffer(initial_output_buffer_size, osmium::memory::Buffer::auto_grow::yes) {
-    }
-
-    const osmium::area::area_stats& stats() const noexcept {
-        return m_stats;
+        m_assembler_config(assembler_config) {
     }
 
     /**
@@ -126,20 +99,6 @@ public:
     bool keep_member(const osmium::relations::RelationMeta& /*relation_meta*/, const osmium::RelationMember& member) const {
         // We are only interested in members of type way.
         return member.type() == osmium::item_type::way;
-    }
-
-
-    void flush() {
-        flush_output_buffer();
-    }
-
-    osmium::memory::Buffer read() {
-        osmium::memory::Buffer buffer(initial_output_buffer_size, osmium::memory::Buffer::auto_grow::yes);
-
-        using std::swap;
-        swap(buffer, m_output_buffer);
-
-        return buffer;
     }
 
 }; // class AdminCollector
