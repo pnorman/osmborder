@@ -39,6 +39,7 @@
 #include <osmium/osm/types.hpp>
 #include <osmium/util/memory.hpp>
 #include <osmium/util/verbose_output.hpp>
+#include <osmium/io/any_compression.hpp>
 
 #include "return_codes.hpp"
 
@@ -188,6 +189,7 @@ int main(int argc, char* argv[]) {
                     }
                     return true;
                 }
+                return false;
             });
 
             reader.close();

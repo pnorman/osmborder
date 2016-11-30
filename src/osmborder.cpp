@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>
 
 #ifndef _MSC_VER
 # include <unistd.h>
@@ -32,8 +33,12 @@
 #include <osmium/io/file.hpp>
 #include <osmium/util/memory.hpp>
 #include <osmium/util/verbose_output.hpp>
-#include <osmium/area/assembler.hpp>
 #include <osmium/handler.hpp>
+#include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/visitor.hpp>
+#include <osmium/osm/types.hpp>
+#include <osmium/index/map/all.hpp>
+#include <osmium/geom/wkt.hpp>
 
 namespace osmium { class Area; }
 namespace osmium { class Node; }
@@ -44,7 +49,6 @@ namespace osmium { class Way; }
 
 #include "options.hpp"
 #include "stats.hpp"
-#include "admin_collector.hpp"
 
 // Global debug marker
 bool debug;
@@ -63,26 +67,155 @@ std::string memory_usage() {
 
 /* ================================================== */
 
-class AdminHandler : public osmium::handler::Handler {
+// This class acts like NodeLocationsForWays but only stores specific nodes
+// Also, only positive. TODO: Add in negative support
+template <typename TStoragePosIDs>
+class SpecificNodeLocationsForWays : public osmium::handler::NodeLocationsForWays<TStoragePosIDs> {
+
+    // some var for a set of IDs to keep
 public:
+    explicit SpecificNodeLocationsForWays(TStoragePosIDs& storage_pos) : osmium::handler::NodeLocationsForWays<TStoragePosIDs>(storage_pos) { }
+
     void node(const osmium::Node& node) {
-        std::cout << 'n' << node.id() << "\n";
+        if (true) {
+            osmium::handler::NodeLocationsForWays<TStoragePosIDs>::node(node);
+        }
+    }
+    void way (osmium::Way& way) {
+        osmium::handler::NodeLocationsForWays<TStoragePosIDs>::way(way);
+    }
+};
+
+
+class AdminHandler : public osmium::handler::Handler {
+// should be private
+private:
+    // p1
+    // All relations we are interested in will be kept in this buffer
+    osmium::memory::Buffer m_relations_buffer;
+    // Mapping of way IDs to the offset to the parent relation
+    typedef std::vector<size_t> RelationParents;
+    typedef std::map<osmium::unsigned_object_id_type, RelationParents> WayRelations;
+    WayRelations m_way_rels;
+
+
+    osmium::geom::WKTFactory<> m_factory;
+    static constexpr size_t initial_buffer_size = 1024 * 1024;
+
+    static const std::map<std::string, const int> admin_levels;
+    // Based on osm2pgsql escaping
+    std::string escape(const std::string& src) {
+        std::string dst;
+        for (const char c: src) {
+            switch(c) {
+                case '\\':  dst.append("\\\\"); break;
+                    //case 8:   dst.append("\\\b"); break;
+                    //case 12:  dst.append("\\\f"); break;
+                case '\n':  dst.append("\\\n"); break;
+                case '\r':  dst.append("\\\r"); break;
+                case '\t':  dst.append("\\\t"); break;
+                    //case 11:  dst.append("\\\v"); break;
+                default:    dst.push_back(c); break;
+            }
+        }
+        return dst;
     }
 
-    void way(const osmium::Way& way) {
-        std::cout << 'w' << way.id() << "\n";
+    std::ostream& m_out;
+public:
+    // p2
+    // All ways we're interested in
+    osmium::memory::Buffer m_ways_buffer;
+
+    /**
+     * This handler operates on the ways-only pass and extracts way information, but can't
+     * yet do geometries
+     */
+    class HandlerPass2 : public osmium::handler::Handler {
+    public:
+        osmium::memory::Buffer& m_ways_buffer;
+        const WayRelations& m_way_rels;
+
+        explicit HandlerPass2(osmium::memory::Buffer& ways_buffer, const WayRelations& way_rels) :
+            m_ways_buffer(ways_buffer),
+            m_way_rels(way_rels){
+        }
+
+        void way (const osmium::Way& way) {
+            if (m_way_rels.count(way.id()) > 0){
+                m_ways_buffer.add_item(way);
+            }
+        }
+    };
+    AdminHandler(std::ostream& out) :
+        m_ways_buffer(initial_buffer_size, osmium::memory::Buffer::auto_grow::yes),
+        m_relations_buffer(initial_buffer_size, osmium::memory::Buffer::auto_grow::yes),
+        m_handler_pass2(m_ways_buffer, m_way_rels),
+        m_out(out) {
     }
 
-    void area(const osmium::Area& area) {
-        std::cout << 'a' << area.id() << "\n";
-    }
+   void way(const osmium::Way& way) {
+       std::vector<int> parent_admin_levels;
+       for (const auto& rel_offset : m_way_rels[way.id()]) {
+           const osmium::TagList& tags = m_relations_buffer.get<const osmium::Relation>(rel_offset).tags();
+           const char * admin_level = tags.get_value_by_key("admin_level", "");
+           /* can't use admin_levels[] because [] is non-const, but there must be a better way? */
+           auto admin_it = admin_levels.find(admin_level);
+           if (admin_it != admin_levels.end()) {
+               parent_admin_levels.push_back(admin_it->second);
+           }
+
+       }
+
+
+       if (parent_admin_levels.size() > 0) {
+           try {
+               m_out << way.id()
+                     // parent_admin_levels is already escaped.
+                     << "\t" << *std::min_element(parent_admin_levels.begin(), parent_admin_levels.end())
+                     << "\t" << m_factory.create_linestring(way) << "\n";
+           } catch (osmium::geometry_error& e) {
+               std::cerr << "Geometry error on way " << way.id() << ": " << e.what() << "\n";
+           }
+       }
+   }
 
     void relation(const osmium::Relation& relation) {
-        std::cout << 'r' << relation.id() << "\n";
+        if (relation.tags().has_tag("boundary", "administrative")) {
+            m_relations_buffer.add_item(relation);
+            auto relation_offset = m_relations_buffer.commit();
+/*            std::cout << 'r' << relation.id() << " at ro " << relation_offset;
+            if (relation.tags().has_key("name")) {
+                std::cout << " name=" << relation.tags().get_value_by_key("name");
+            }
+            std::cout << '\n';*/
+            for (const auto &rm : relation.members()) {
+                if (rm.type() == osmium::item_type::way) {
+                    // Calls the default constructor if it doesn't exist, otherwise add to the back
+                    // TODO: Can this call the constructor to create a vector of size N, where N=2?
+                    m_way_rels[rm.ref()].push_back(relation_offset);
+                    //std::cout << "rm " << rm.ref() << "\n";
+                }
+            }
+        }
     }
 
+    osmium::memory::Buffer& get_ways() {
+        return m_ways_buffer;
+    }
+
+    void flush() {
+    }
+    // Handler for the pass2 ways
+    HandlerPass2 m_handler_pass2;
 
 };
+
+// TODO: Cover all admin_levels
+// This is a map instead of something like an array of chars because admin_levels can extend past 9
+const std::map<std::string, const int> AdminHandler::admin_levels = {{"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}};
+
+
 int main(int argc, char *argv[]) {
     Stats stats;
     unsigned int warnings = 0;
@@ -98,30 +231,48 @@ int main(int argc, char *argv[]) {
 
     debug = options.debug;
 
+    vout << "Writing to file '" << options.output_file << "'.\n";
+
+    std::ofstream output (options.output_file);
+
     osmium::io::File infile{argv[optind]};
 
-    osmium::area::Assembler::config_type assembler_config;
-    AdminCollector<osmium::area::Assembler> collector{};
+    AdminHandler admin_handler(output);
 
-    vout << "Reading relations in pass 1.\n";
-    osmium::io::Reader reader1(infile, osmium::osm_entity_bits::relation);
-    collector.read_relations(reader1);
-
-    vout << memory_usage();
-
-    vout << "Reading pass 2.\n";
-    osmium::io::Reader reader2(infile, osmium::osm_entity_bits::way);
-
-    AdminHandler admin_handler;
-
-    osmium::apply(reader2, collector.handler([&admin_handler](osmium::memory::Buffer&& buffer) {
-        osmium::apply(buffer, admin_handler);}));
+    {
+        vout << "Reading relations in pass 1.\n";
+        osmium::io::Reader reader(infile, osmium::osm_entity_bits::relation);
+        osmium::apply(reader, admin_handler);
+        reader.close();
+        vout << memory_usage();
+    }
+    {
+        vout << "Reading ways pass 2.\n";
+        osmium::io::Reader reader(infile, osmium::osm_entity_bits::way);
+        osmium::apply(reader, admin_handler.m_handler_pass2);
+        reader.close();
+        vout << memory_usage();
+    }
+    typedef osmium::index::map::SparseMmapArray<osmium::unsigned_object_id_type, osmium::Location> index_type;
+    typedef SpecificNodeLocationsForWays<index_type> location_handler_type;
+    index_type index;
+    location_handler_type location_handler{index};
+    {
+        vout << "Reading nodes pass 3.\n";
+        osmium::io::Reader reader(infile, osmium::osm_entity_bits::node);
+        osmium::apply(reader, location_handler);
+        reader.close();
+        vout << memory_usage();
+    }
+    vout << "Building linestrings.\n";
+    osmium::io::Reader reader(infile, osmium::osm_entity_bits::way);
+    osmium::apply(reader, location_handler, admin_handler);
 
     vout << "All done.\n";
     vout << memory_usage();
 
-    std::cout << "There were " << warnings << " warnings.\n";
-    std::cout << "There were " << errors << " errors.\n";
+    std::cerr << "There were " << warnings << " warnings.\n";
+    std::cerr << "There were " << errors << " errors.\n";
 
     if (errors || warnings > max_warnings) {
         return return_code_error;
