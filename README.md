@@ -59,6 +59,7 @@ CREATE TABLE osmborder_lines (
   osm_id bigint,
   admin_level int,
   disputed bool,
+  maritime bool,
   way Geometry(LineString));
 \copy osmborder_lines FROM osmborder_lines.csv
 
