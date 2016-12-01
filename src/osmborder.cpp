@@ -156,6 +156,7 @@ public:
 
    void way(const osmium::Way& way) {
        std::vector<int> parent_admin_levels;
+       bool disputed = false;
        for (const auto& rel_offset : m_way_rels[way.id()]) {
            const osmium::TagList& tags = m_relations_buffer.get<const osmium::Relation>(rel_offset).tags();
            const char * admin_level = tags.get_value_by_key("admin_level", "");
@@ -164,15 +165,17 @@ public:
            if (admin_it != admin_levels.end()) {
                parent_admin_levels.push_back(admin_it->second);
            }
-
+           disputed = disputed || way.tags().has_tag("disputed","yes");
+           disputed = disputed || way.tags().has_tag("dispute","yes");
+           disputed = disputed || way.tags().has_tag("border_status","dispute");
        }
-
 
        if (parent_admin_levels.size() > 0) {
            try {
                m_out << way.id()
                      // parent_admin_levels is already escaped.
                      << "\t" << *std::min_element(parent_admin_levels.begin(), parent_admin_levels.end())
+                     << "\t" << ((disputed) ? ("true") : ("false"))
                      << "\t" << m_factory.create_linestring(way) << "\n";
            } catch (osmium::geometry_error& e) {
                std::cerr << "Geometry error on way " << way.id() << ": " << e.what() << "\n";
