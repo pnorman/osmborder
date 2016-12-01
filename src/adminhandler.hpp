@@ -130,17 +130,11 @@ public:
         if (relation.tags().has_tag("boundary", "administrative")) {
             m_relations_buffer.add_item(relation);
             auto relation_offset = m_relations_buffer.commit();
-/*            std::cout << 'r' << relation.id() << " at ro " << relation_offset;
-            if (relation.tags().has_key("name")) {
-                std::cout << " name=" << relation.tags().get_value_by_key("name");
-            }
-            std::cout << '\n';*/
             for (const auto &rm : relation.members()) {
                 if (rm.type() == osmium::item_type::way) {
                     // Calls the default constructor if it doesn't exist, otherwise add to the back
                     // TODO: Can this call the constructor to create a vector of size N, where N=2?
                     m_way_rels[rm.ref()].push_back(relation_offset);
-                    //std::cout << "rm " << rm.ref() << "\n";
                 }
             }
         }
