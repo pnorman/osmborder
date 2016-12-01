@@ -88,7 +88,6 @@ public:
 
 
 class AdminHandler : public osmium::handler::Handler {
-// should be private
 private:
     // p1
     // All relations we are interested in will be kept in this buffer
@@ -98,11 +97,15 @@ private:
     typedef std::map<osmium::unsigned_object_id_type, RelationParents> WayRelations;
     WayRelations m_way_rels;
 
+    // p2
+    // All ways we're interested in
+    osmium::memory::Buffer m_ways_buffer;
 
     osmium::geom::WKBFactory<> m_factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
     static constexpr size_t initial_buffer_size = 1024 * 1024;
 
     static const std::map<std::string, const int> admin_levels;
+
     // Based on osm2pgsql escaping
     std::string escape(const std::string& src) {
         std::string dst;
@@ -123,13 +126,9 @@ private:
 
     std::ostream& m_out;
 public:
-    // p2
-    // All ways we're interested in
-    osmium::memory::Buffer m_ways_buffer;
-
     /**
      * This handler operates on the ways-only pass and extracts way information, but can't
-     * yet do geometries
+     * yet do geometries since it doesn't have node information
      */
     class HandlerPass2 : public osmium::handler::Handler {
     public:
@@ -147,6 +146,7 @@ public:
             }
         }
     };
+
     AdminHandler(std::ostream& out) :
         m_ways_buffer(initial_buffer_size, osmium::memory::Buffer::auto_grow::yes),
         m_relations_buffer(initial_buffer_size, osmium::memory::Buffer::auto_grow::yes),
@@ -154,42 +154,42 @@ public:
         m_out(out) {
     }
 
-   void way(const osmium::Way& way) {
-       std::vector<int> parent_admin_levels;
-       bool disputed = false;
-       bool maritime = false;
+    void way(const osmium::Way& way) {
+        std::vector<int> parent_admin_levels;
+        bool disputed = false;
+        bool maritime = false;
 
-       // Tags on the way itself
-       disputed = disputed || way.tags().has_tag("disputed","yes");
-       disputed = disputed || way.tags().has_tag("dispute","yes");
-       disputed = disputed || way.tags().has_tag("border_status","dispute");
+        // Tags on the way itself
+        disputed = disputed || way.tags().has_tag("disputed","yes");
+        disputed = disputed || way.tags().has_tag("dispute","yes");
+        disputed = disputed || way.tags().has_tag("border_status","dispute");
 
-       maritime = maritime || way.tags().has_tag("maritime","yes");
-       maritime = maritime || way.tags().has_tag("natural","coastline");
+        maritime = maritime || way.tags().has_tag("maritime","yes");
+        maritime = maritime || way.tags().has_tag("natural","coastline");
 
-       // Tags on the parent relations
-       for (const auto& rel_offset : m_way_rels[way.id()]) {
-           const osmium::TagList& tags = m_relations_buffer.get<const osmium::Relation>(rel_offset).tags();
-           const char * admin_level = tags.get_value_by_key("admin_level", "");
-           /* can't use admin_levels[] because [] is non-const, but there must be a better way? */
-           auto admin_it = admin_levels.find(admin_level);
-           if (admin_it != admin_levels.end()) {
-               parent_admin_levels.push_back(admin_it->second);
-           }
-       }
+        // Tags on the parent relations
+        for (const auto& rel_offset : m_way_rels[way.id()]) {
+            const osmium::TagList& tags = m_relations_buffer.get<const osmium::Relation>(rel_offset).tags();
+            const char * admin_level = tags.get_value_by_key("admin_level", "");
+            /* can't use admin_levels[] because [] is non-const, but there must be a better way? */
+            auto admin_it = admin_levels.find(admin_level);
+            if (admin_it != admin_levels.end()) {
+                parent_admin_levels.push_back(admin_it->second);
+            }
+        }
 
-       if (parent_admin_levels.size() > 0) {
-           try {
-               m_out << way.id()
+        if (parent_admin_levels.size() > 0) {
+            try {
+                m_out << way.id()
                      // parent_admin_levels is already escaped.
                      << "\t" << *std::min_element(parent_admin_levels.begin(), parent_admin_levels.end())
                        << "\t" << ((disputed) ? ("true") : ("false"))
                        << "\t" << ((maritime) ? ("true") : ("false"))
                      << "\t" << m_factory.create_linestring(way) << "\n";
-           } catch (osmium::geometry_error& e) {
-               std::cerr << "Geometry error on way " << way.id() << ": " << e.what() << "\n";
-           }
-       }
+            } catch (osmium::geometry_error& e) {
+                std::cerr << "Geometry error on way " << way.id() << ": " << e.what() << "\n";
+            }
+        }
    }
 
     void relation(const osmium::Relation& relation) {
