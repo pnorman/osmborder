@@ -38,7 +38,7 @@
 #include <osmium/visitor.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/index/map/all.hpp>
-#include <osmium/geom/wkt.hpp>
+#include <osmium/geom/wkb.hpp>
 
 namespace osmium { class Area; }
 namespace osmium { class Node; }
@@ -99,7 +99,7 @@ private:
     WayRelations m_way_rels;
 
 
-    osmium::geom::WKTFactory<> m_factory;
+    osmium::geom::WKBFactory<> m_factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
     static constexpr size_t initial_buffer_size = 1024 * 1024;
 
     static const std::map<std::string, const int> admin_levels;

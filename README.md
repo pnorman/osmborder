@@ -60,7 +60,7 @@ CREATE TABLE osmborder_lines (
   admin_level int,
   disputed bool,
   maritime bool,
-  way Geometry(LineString));
+  way Geometry(LineString, 4326));
 \copy osmborder_lines FROM osmborder_lines.csv
 
 CREATE INDEX osmborder_lines_way_idx ON osmborder_lines USING gist (way) WITH (fillfactor=100);
