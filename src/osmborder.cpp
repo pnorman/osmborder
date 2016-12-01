@@ -157,6 +157,13 @@ public:
    void way(const osmium::Way& way) {
        std::vector<int> parent_admin_levels;
        bool disputed = false;
+
+       // Tags on the way itself
+       disputed = disputed || way.tags().has_tag("disputed","yes");
+       disputed = disputed || way.tags().has_tag("dispute","yes");
+       disputed = disputed || way.tags().has_tag("border_status","dispute");
+
+       // Tags on the parent relations
        for (const auto& rel_offset : m_way_rels[way.id()]) {
            const osmium::TagList& tags = m_relations_buffer.get<const osmium::Relation>(rel_offset).tags();
            const char * admin_level = tags.get_value_by_key("admin_level", "");
@@ -165,9 +172,6 @@ public:
            if (admin_it != admin_levels.end()) {
                parent_admin_levels.push_back(admin_it->second);
            }
-           disputed = disputed || way.tags().has_tag("disputed","yes");
-           disputed = disputed || way.tags().has_tag("dispute","yes");
-           disputed = disputed || way.tags().has_tag("border_status","dispute");
        }
 
        if (parent_admin_levels.size() > 0) {
