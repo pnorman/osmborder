@@ -42,9 +42,32 @@ in the `doc/html` directory.
 ## Testing
 
 ## Running
-
+1. Filter the planet with osmborder_filter
+  ```sh
+  osmborder_filter -o filtered.osm.pbf planet-latest.osm.pbf
+  ```
+2. Create linestrings with osmborder
+```sh
+osmborder -o osmborder_lines.csv filtered.osm.pbf
+```
 
 ## Output
+OSMBorder outputs a tab-delimited file that can be loaded directly into PostgreSQL. This requires a suitable table, which can be created, loaded, optimized, and indexed with
+
+```sql
+CREATE TABLE osmborder_lines (
+  osm_id bigint,
+  admin_level int,
+  disputed bool,
+  way Geometry(LineString));
+\copy osmborder_lines FROM osmborder_lines.csv
+
+CREATE INDEX osmborder_lines_way_idx ON osmborder_lines USING gist (way) WITH (fillfactor=100);
+CLUSTER osmborder_lines USING osmborder_lines_way_idx;
+CREATE INDEX osmborder_lines_way_low_idx ON osmborder_lines USING gist (way) WITH (fillfactor=100) WHERE admin_level <= 4;
+```
+
+The indexes are optional, but useful if rendering maps.
 
 ## Steps
 
