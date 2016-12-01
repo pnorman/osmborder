@@ -82,9 +82,9 @@ Run `osmborder --help` to see all options.
 
 ## License
 
-OSMCoastline is available under the GNU GPL version 3 or later.
+OSMBorder is available under the GNU GPL version 3 or later.
 
 ## Authors
 
-Paul Norman (penorman@mac.com)
+Paul Norman (penorman@mac.com)  
 Based on OSMCOastline by Jochen Topf (jochen@topf.org)
