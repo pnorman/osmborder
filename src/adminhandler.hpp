@@ -20,6 +20,7 @@
   along with OSMBorder.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+#include <osmium/geom/mercator_projection.hpp>
 
 class AdminHandler : public osmium::handler::Handler {
 private:
@@ -35,7 +36,7 @@ private:
     // All ways we're interested in
     osmium::memory::Buffer m_ways_buffer;
 
-    osmium::geom::WKBFactory<> m_factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
+    osmium::geom::WKBFactory<osmium::geom::MercatorProjection> m_factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
     static constexpr size_t initial_buffer_size = 1024 * 1024;
 
     static const std::map<std::string, const int> admin_levels;
