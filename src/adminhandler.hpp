@@ -88,6 +88,7 @@ public:
             m_out(out) {
     }
 
+    /* This is where the logic that handles tagging lives, getting tags from the way and parent rels */
     void way(const osmium::Way& way) {
         std::vector<int> parent_admin_levels;
         bool disputed = false;

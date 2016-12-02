@@ -70,7 +70,20 @@ CREATE INDEX osmborder_lines_way_low_idx ON osmborder_lines USING gist (way) WIT
 
 The indexes are optional, but useful if rendering maps.
 
-## Steps
+## Tags used
+
+OSMBorder uses tags on the way and its parent relations. It does **not** consider geometry, relation roles, or non-way
+relation members.
+
+### admin_level
+
+The admin_level is the lowest `admin_level` value of the parent relations. The way tags are not considered.
+
+### disputed
+The presence of `disputed=yes`, `dispute=yes`, or `border_status=dispute` on the ways is used to indicate part of a border is disputed. All the tags function the same, but `disputed=yes` is my preference. Relation tags are not considered.
+
+### maritime
+`maritime=yes` or `natural=coastline` indicates a maritime border for the purposes of rendering. Relations are not considered, nor intersection with water areas.
 
 ## Options
 
