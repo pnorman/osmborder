@@ -76,7 +76,7 @@ The indexes are optional, but useful if rendering maps.
 
     -v, --verbose
 
-Gives you detailed information on what osmcoastline is doing, including timing.
+Gives you detailed information on what osmborder is doing, including timing.
 
 Run `osmborder --help` to see all options.
 
