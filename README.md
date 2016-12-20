@@ -100,4 +100,4 @@ OSMBorder is available under the GNU GPL version 3 or later.
 ## Authors
 
 Paul Norman (penorman@mac.com)  
-Based on OSMCOastline by Jochen Topf (jochen@topf.org)
+Based on OSMCoastline by Jochen Topf (jochen@topf.org)
