@@ -107,7 +107,8 @@ public:
 // TODO: Cover all admin_levels
 // This is a map instead of something like an array of chars because admin_levels can extend past 9
 const std::map<std::string, const int> AdminHandler::admin_levels = {
-    {"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}};
+    {"2", 2}, {"3", 3}, {"4", 4},   {"5", 5},   {"6", 6},  {"7", 7},
+    {"8", 8}, {"9", 9}, {"10", 10}, {"11", 11}, {"12", 12}};
 
 int main(int argc, char *argv[])
 {
