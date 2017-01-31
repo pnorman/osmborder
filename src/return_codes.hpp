@@ -22,11 +22,12 @@
 
 */
 
-enum return_codes {
-    return_code_ok      = 0,
+enum return_codes
+{
+    return_code_ok = 0,
     return_code_warning = 1,
-    return_code_error   = 2,
-    return_code_fatal   = 3,
+    return_code_error = 2,
+    return_code_fatal = 3,
     return_code_cmdline = 4
 };
 

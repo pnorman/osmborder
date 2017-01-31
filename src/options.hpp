@@ -27,10 +27,10 @@
 /**
  * This class encapsulates the command line parsing.
  */
-class Options {
+class Options
+{
 
 public:
-
     /// Input OSM file name.
     std::string inputfile;
 
@@ -49,16 +49,15 @@ public:
     /// Verbose output?
     bool verbose;
 
-    Options(int argc, char* argv[]);
+    Options(int argc, char *argv[]);
 
 private:
-
     /**
      * Get EPSG code from text. This method knows about a few common cases
      * of specifying WGS84 or the "Google mercator" SRS. More are currently
      * not supported.
      */
-    int get_epsg(const char* text);
+    int get_epsg(const char *text);
 
     void print_help() const;
 

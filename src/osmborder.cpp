@@ -20,35 +20,43 @@
 
 */
 
+#include <algorithm>
 #include <iostream>
 #include <string>
-#include <algorithm>
 
 #ifndef _MSC_VER
-# include <unistd.h>
+#include <unistd.h>
 #else
-# include <io.h>
+#include <io.h>
 #endif
 
-#include <osmium/io/any_input.hpp>
-#include <osmium/io/file.hpp>
-#include <osmium/util/memory.hpp>
-#include <osmium/util/verbose_output.hpp>
+#include <osmium/geom/wkb.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
-#include <osmium/visitor.hpp>
-#include <osmium/osm/types.hpp>
 #include <osmium/index/map/all.hpp>
-#include <osmium/geom/wkb.hpp>
+#include <osmium/io/any_input.hpp>
+#include <osmium/io/file.hpp>
+#include <osmium/osm/types.hpp>
+#include <osmium/util/memory.hpp>
+#include <osmium/util/verbose_output.hpp>
+#include <osmium/visitor.hpp>
 
-namespace osmium { class Area; }
-namespace osmium { class Node; }
-namespace osmium { class Relation; }
-namespace osmium { class Way; }
+namespace osmium {
+class Area;
+}
+namespace osmium {
+class Node;
+}
+namespace osmium {
+class Relation;
+}
+namespace osmium {
+class Way;
+}
 
 #include "adminhandler.hpp"
-#include "return_codes.hpp"
 #include "options.hpp"
+#include "return_codes.hpp"
 #include "stats.hpp"
 
 // Global debug marker
@@ -59,10 +67,12 @@ const unsigned int max_warnings = 500;
 
 /* ================================================== */
 
-std::string memory_usage() {
+std::string memory_usage()
+{
     osmium::MemoryUsage mem;
     std::ostringstream s;
-    s << "Memory used: current: " << mem.current() << " MBytes, peak: " << mem.peak() << " MBytes\n";
+    s << "Memory used: current: " << mem.current()
+      << " MBytes, peak: " << mem.peak() << " MBytes\n";
     return s.str();
 }
 
@@ -71,30 +81,36 @@ std::string memory_usage() {
 // This class acts like NodeLocationsForWays but only stores specific nodes
 // Also, only positive. TODO: Add in negative support
 template <typename TStoragePosIDs>
-class SpecificNodeLocationsForWays : public osmium::handler::NodeLocationsForWays<TStoragePosIDs> {
+class SpecificNodeLocationsForWays
+    : public osmium::handler::NodeLocationsForWays<TStoragePosIDs>
+{
 
     // some var for a set of IDs to keep
 public:
-    explicit SpecificNodeLocationsForWays(TStoragePosIDs& storage_pos) : osmium::handler::NodeLocationsForWays<TStoragePosIDs>(storage_pos) { }
+    explicit SpecificNodeLocationsForWays(TStoragePosIDs &storage_pos)
+    : osmium::handler::NodeLocationsForWays<TStoragePosIDs>(storage_pos)
+    {
+    }
 
-    void node(const osmium::Node& node) {
+    void node(const osmium::Node &node)
+    {
         if (true) {
             osmium::handler::NodeLocationsForWays<TStoragePosIDs>::node(node);
         }
     }
-    void way (osmium::Way& way) {
+    void way(osmium::Way &way)
+    {
         osmium::handler::NodeLocationsForWays<TStoragePosIDs>::way(way);
     }
 };
 
-
-
 // TODO: Cover all admin_levels
 // This is a map instead of something like an array of chars because admin_levels can extend past 9
-const std::map<std::string, const int> AdminHandler::admin_levels = {{"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}};
+const std::map<std::string, const int> AdminHandler::admin_levels = {
+    {"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}};
 
-
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     Stats stats;
     unsigned int warnings = 0;
     unsigned int errors = 0;
@@ -111,7 +127,7 @@ int main(int argc, char *argv[]) {
 
     vout << "Writing to file '" << options.output_file << "'.\n";
 
-    std::ofstream output (options.output_file);
+    std::ofstream output(options.output_file);
 
     osmium::io::File infile{argv[optind]};
 
@@ -131,7 +147,9 @@ int main(int argc, char *argv[]) {
         reader.close();
         vout << memory_usage();
     }
-    typedef osmium::index::map::SparseMmapArray<osmium::unsigned_object_id_type, osmium::Location> index_type;
+    typedef osmium::index::map::SparseMmapArray<osmium::unsigned_object_id_type,
+                                                osmium::Location>
+        index_type;
     typedef SpecificNodeLocationsForWays<index_type> location_handler_type;
     index_type index;
     location_handler_type location_handler{index};
@@ -160,4 +178,3 @@ int main(int argc, char *argv[]) {
         return return_code_ok;
     }
 }
-

@@ -22,7 +22,8 @@
 
 */
 
-struct Stats {
+struct Stats
+{
     unsigned int ways;
     unsigned int unconnected_nodes;
     unsigned int rings;

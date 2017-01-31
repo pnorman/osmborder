@@ -20,31 +20,28 @@
 */
 
 #include <cstdlib>
-#include <iostream>
 #include <getopt.h>
+#include <iostream>
 
-#include "return_codes.hpp"
 #include "options.hpp"
+#include "return_codes.hpp"
 
 #ifdef _MSC_VER
 #define strcasecmp _stricmp
 #endif
 
-Options::Options(int argc, char* argv[]) :
-    inputfile(),
-    debug(false),
-    output_file(),
-    overwrite_output(false),
-    verbose(false) {
+Options::Options(int argc, char *argv[])
+: inputfile(), debug(false), output_file(), overwrite_output(false),
+  verbose(false)
+{
     static struct option long_options[] = {
-        {"debug",                 no_argument, 0, 'd'},
-        {"help",                  no_argument, 0, 'h'},
-        {"output-file",     required_argument, 0, 'o'},
-        {"overwrite",             no_argument, 0, 'f'},
-        {"verbose",               no_argument, 0, 'v'},
-        {"version",               no_argument, 0, 'V'},
-        {0, 0, 0, 0}
-    };
+        {"debug", no_argument, 0, 'd'},
+        {"help", no_argument, 0, 'h'},
+        {"output-file", required_argument, 0, 'o'},
+        {"overwrite", no_argument, 0, 'f'},
+        {"verbose", no_argument, 0, 'v'},
+        {"version", no_argument, 0, 'V'},
+        {0, 0, 0, 0}};
 
     while (1) {
         int c = getopt_long(argc, argv, "dho:fvV", long_options, 0);
@@ -52,31 +49,34 @@ Options::Options(int argc, char* argv[]) :
             break;
 
         switch (c) {
-            case 'd':
-                debug = true;
-                std::cerr << "Enabled debug option\n";
-                break;
-            case 'h':
-                print_help();
-                std::exit(return_code_ok);
-            case 'o':
-                output_file = optarg;
-                break;
-            case 'f':
-                overwrite_output = true;
-                break;
-            case 'v':
-                verbose = true;
-                break;
-            case 'V':
-                std::cout << "osmborder version " OSMBORDER_VERSION "\n"
-                          << "Copyright (C) 2012-2016  Jochen Topf <jochen@topf.org>\n"
-                          << "License: GNU GENERAL PUBLIC LICENSE Version 3 <http://gnu.org/licenses/gpl.html>.\n"
-                          << "This is free software: you are free to change and redistribute it.\n"
-                          << "There is NO WARRANTY, to the extent permitted by law.\n";
-                std::exit(return_code_ok);
-            default:
-                std::exit(return_code_cmdline);
+        case 'd':
+            debug = true;
+            std::cerr << "Enabled debug option\n";
+            break;
+        case 'h':
+            print_help();
+            std::exit(return_code_ok);
+        case 'o':
+            output_file = optarg;
+            break;
+        case 'f':
+            overwrite_output = true;
+            break;
+        case 'v':
+            verbose = true;
+            break;
+        case 'V':
+            std::cout
+                << "osmborder version " OSMBORDER_VERSION "\n"
+                << "Copyright (C) 2012-2016  Jochen Topf <jochen@topf.org>\n"
+                << "License: GNU GENERAL PUBLIC LICENSE Version 3 "
+                   "<http://gnu.org/licenses/gpl.html>.\n"
+                << "This is free software: you are free to change and "
+                   "redistribute it.\n"
+                << "There is NO WARRANTY, to the extent permitted by law.\n";
+            std::exit(return_code_ok);
+        default:
+            std::exit(return_code_cmdline);
         }
     }
 
@@ -93,15 +93,16 @@ Options::Options(int argc, char* argv[]) :
     inputfile = argv[optind];
 }
 
-void Options::print_help() const {
+void Options::print_help() const
+{
     std::cout << "osmborder [OPTIONS] OSMFILE\n"
               << "\nOptions:\n"
               << "  -h, --help                 - This help message\n"
               << "  -d, --debug                - Enable debugging output\n"
-              << "  -f, --overwrite            - Overwrite output file if it already exists\n"
+              << "  -f, --overwrite            - Overwrite output file if it "
+                 "already exists\n"
               << "  -o, --output-file=FILE     - file for output\n"
               << "  -v, --verbose              - Verbose output\n"
               << "  -V, --version              - Show version and exit\n"
               << "\n";
 }
-
