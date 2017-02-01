@@ -58,6 +58,7 @@ OSMBorder outputs a tab-delimited file that can be loaded directly into PostgreS
 CREATE TABLE osmborder_lines (
   osm_id bigint,
   admin_level int,
+  dividing_line bool,
   disputed bool,
   maritime bool,
   way Geometry(LineString, 3857));

@@ -139,12 +139,22 @@ public:
 
         if (parent_admin_levels.size() > 0) {
             try {
-                m_out << way.id()
+                // Sort for both min parent admin level and if it divides areas
+                std::sort(parent_admin_levels.begin(),
+                          parent_admin_levels.end());
+                const int min_parent_admin_level = parent_admin_levels[0];
+
+                // Checks if two parents are the same admin level
+                const bool dividing_line =
+                    std::adjacent_find(parent_admin_levels.begin(),
+                                       parent_admin_levels.end()) !=
+                    parent_admin_levels.end();
+
+                m_out << way.id() << "\t"
                       // parent_admin_levels is already escaped.
-                      << "\t"
-                      << *std::min_element(parent_admin_levels.begin(),
-                                           parent_admin_levels.end())
-                      << "\t" << ((disputed) ? ("true") : ("false")) << "\t"
+                      << min_parent_admin_level << "\t"
+                      << ((dividing_line) ? ("true") : ("false")) << "\t"
+                      << ((disputed) ? ("true") : ("false")) << "\t"
                       << ((maritime) ? ("true") : ("false")) << "\t"
                       << m_factory.create_linestring(way) << "\n";
             } catch (osmium::geometry_error &e) {
