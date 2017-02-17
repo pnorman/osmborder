@@ -20,6 +20,7 @@
   along with OSMBorder.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+#include "outputter-csv.hpp"
 #include <osmium/geom/mercator_projection.hpp>
 
 class AdminHandler : public osmium::handler::Handler
@@ -40,6 +41,7 @@ private:
 
     osmium::geom::WKBFactory<osmium::geom::MercatorProjection> m_factory{
         osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
+    CsvOutputter m_outputter;
     static constexpr size_t initial_buffer_size = 1024 * 1024;
 
     static const std::map<std::string, const int> admin_levels;
@@ -73,8 +75,6 @@ private:
         return dst;
     }
 
-    std::ostream &m_out;
-
 public:
     /**
      * This handler operates on the ways-only pass and extracts way information, but can't
@@ -105,7 +105,7 @@ public:
                     osmium::memory::Buffer::auto_grow::yes),
       m_relations_buffer(initial_buffer_size,
                          osmium::memory::Buffer::auto_grow::yes),
-      m_handler_pass2(m_ways_buffer, m_way_rels), m_out(out)
+      m_handler_pass2(m_ways_buffer, m_way_rels), m_outputter(out)
     {
     }
 
@@ -150,13 +150,8 @@ public:
                                        parent_admin_levels.end()) !=
                     parent_admin_levels.end();
 
-                m_out << way.id() << "\t"
-                      // parent_admin_levels is already escaped.
-                      << min_parent_admin_level << "\t"
-                      << ((dividing_line) ? ("true") : ("false")) << "\t"
-                      << ((disputed) ? ("true") : ("false")) << "\t"
-                      << ((maritime) ? ("true") : ("false")) << "\t"
-                      << m_factory.create_linestring(way) << "\n";
+                m_outputter.output_line(way, min_parent_admin_level,
+                                        dividing_line, disputed, maritime);
             } catch (osmium::geometry_error &e) {
                 std::cerr << "Geometry error on way " << way.id() << ": "
                           << e.what() << "\n";

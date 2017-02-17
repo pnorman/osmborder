@@ -6,7 +6,7 @@
 #
 #-----------------------------------------------------------------------------
 
-add_executable(osmborder osmborder.cpp options.cpp)
+add_executable(osmborder osmborder.cpp options.cpp outputter-csv.cpp)
 target_link_libraries(osmborder ${OSMIUM_IO_LIBRARIES} ${GETOPT_LIBRARY})
 install(TARGETS osmborder DESTINATION bin)
 
