@@ -41,7 +41,7 @@ private:
 
     osmium::geom::WKBFactory<osmium::geom::MercatorProjection> m_factory{
         osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
-    Outputter &m_outputter;
+    std::vector<std::shared_ptr<Outputter>> m_outputters;
     static constexpr size_t initial_buffer_size = 1024 * 1024;
 
     static const std::map<std::string, const int> admin_levels;
@@ -100,12 +100,12 @@ public:
         }
     };
 
-    AdminHandler(Outputter &outputter)
+    AdminHandler(std::vector<std::shared_ptr<Outputter>> &outputters)
     : m_ways_buffer(initial_buffer_size,
                     osmium::memory::Buffer::auto_grow::yes),
       m_relations_buffer(initial_buffer_size,
                          osmium::memory::Buffer::auto_grow::yes),
-      m_handler_pass2(m_ways_buffer, m_way_rels), m_outputter(outputter)
+      m_handler_pass2(m_ways_buffer, m_way_rels), m_outputters(outputters)
     {
     }
 
@@ -150,8 +150,10 @@ public:
                                        parent_admin_levels.end()) !=
                     parent_admin_levels.end();
 
-                m_outputter.output_line(way, min_parent_admin_level,
-                                        dividing_line, disputed, maritime);
+                for (auto o : m_outputters) {
+                    o->output_line(way, min_parent_admin_level, dividing_line,
+                                   disputed, maritime);
+                }
             } catch (osmium::geometry_error &e) {
                 std::cerr << "Geometry error on way " << way.id() << ": "
                           << e.what() << "\n";

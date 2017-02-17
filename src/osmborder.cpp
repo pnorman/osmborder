@@ -133,9 +133,10 @@ int main(int argc, char *argv[])
 
     osmium::io::File infile{argv[optind]};
 
-    CsvOutputter csv_outputter(output);
+    std::vector<std::shared_ptr<Outputter>> outputters;
+    outputters.push_back(std::make_shared<CsvOutputter>(output));
 
-    AdminHandler admin_handler(csv_outputter);
+    AdminHandler admin_handler(outputters);
 
     {
         vout << "Reading relations in pass 1.\n";
