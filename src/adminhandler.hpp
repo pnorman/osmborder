@@ -41,7 +41,7 @@ private:
 
     osmium::geom::WKBFactory<osmium::geom::MercatorProjection> m_factory{
         osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
-    CsvOutputter m_outputter;
+    Outputter &m_outputter;
     static constexpr size_t initial_buffer_size = 1024 * 1024;
 
     static const std::map<std::string, const int> admin_levels;
@@ -100,12 +100,12 @@ public:
         }
     };
 
-    AdminHandler(std::ostream &out)
+    AdminHandler(Outputter &outputter)
     : m_ways_buffer(initial_buffer_size,
                     osmium::memory::Buffer::auto_grow::yes),
       m_relations_buffer(initial_buffer_size,
                          osmium::memory::Buffer::auto_grow::yes),
-      m_handler_pass2(m_ways_buffer, m_way_rels), m_outputter(out)
+      m_handler_pass2(m_ways_buffer, m_way_rels), m_outputter(outputter)
     {
     }
 

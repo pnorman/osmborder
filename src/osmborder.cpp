@@ -56,6 +56,7 @@ class Way;
 
 #include "adminhandler.hpp"
 #include "options.hpp"
+#include "outputter-csv.hpp"
 #include "return_codes.hpp"
 #include "stats.hpp"
 
@@ -132,7 +133,9 @@ int main(int argc, char *argv[])
 
     osmium::io::File infile{argv[optind]};
 
-    AdminHandler admin_handler(output);
+    CsvOutputter csv_outputter(output);
+
+    AdminHandler admin_handler(csv_outputter);
 
     {
         vout << "Reading relations in pass 1.\n";

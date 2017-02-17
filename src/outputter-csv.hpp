@@ -27,7 +27,7 @@
 /**
  * Takes the information for one way and outputs it to a file
  */
-class CsvOutputter : Outputter
+class CsvOutputter : public Outputter
 {
 public:
     CsvOutputter(std::ostream &out);
