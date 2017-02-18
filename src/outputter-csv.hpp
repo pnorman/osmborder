@@ -21,6 +21,8 @@
 
 */
 
+#include <fstream>
+
 #include "outputter.hpp"
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/wkb.hpp>
@@ -30,13 +32,13 @@
 class CsvOutputter : public Outputter
 {
 public:
-    CsvOutputter(std::ostream &out);
+    CsvOutputter(const char *output_file);
     void output_line(const osmium::Way &way, int admin_level,
                      bool dividing_line, bool disputed, bool maritime) override;
 
 protected:
     osmium::geom::WKBFactory<osmium::geom::MercatorProjection> m_factory{
         osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
-    std::ostream &m_out;
+    std::ofstream m_out;
 };
 #endif // OUTPUTTER_CSV_HPP

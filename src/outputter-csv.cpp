@@ -21,7 +21,7 @@
 
 #include "outputter-csv.hpp"
 
-CsvOutputter::CsvOutputter(std::ostream &out) : m_out(out) { ; }
+CsvOutputter::CsvOutputter(const char *output_file) : m_out(output_file) {}
 void CsvOutputter::output_line(const osmium::Way &way, int admin_level,
                                bool dividing_line, bool disputed, bool maritime)
 {
