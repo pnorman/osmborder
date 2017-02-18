@@ -38,7 +38,7 @@ public:
     bool debug;
 
     /// Output file name.
-    std::string output_file;
+    std::string csv_output_file;
 
     /// Should output database be overwritten
     bool overwrite_output;

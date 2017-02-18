@@ -131,11 +131,11 @@ int main(int argc, char *argv[])
 
     std::vector<std::shared_ptr<Outputter>> outputters;
 
-    vout << "Writing to file '" << options.output_file << "'.\n";
+    vout << "Writing to file '" << options.csv_output_file << "'.\n";
 
-    std::ofstream output(options.output_file);
+    std::ofstream output(options.csv_output_file);
     outputters.push_back(
-        std::make_shared<CsvOutputter>(options.output_file.c_str()));
+        std::make_shared<CsvOutputter>(options.csv_output_file.c_str()));
 
     AdminHandler admin_handler(outputters);
 

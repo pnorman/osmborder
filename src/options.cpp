@@ -31,20 +31,19 @@
 #endif
 
 Options::Options(int argc, char *argv[])
-: inputfile(), debug(false), output_file(), overwrite_output(false),
+: inputfile(), debug(false), csv_output_file(), overwrite_output(false),
   verbose(false)
 {
-    static struct option long_options[] = {
-        {"debug", no_argument, 0, 'd'},
-        {"help", no_argument, 0, 'h'},
-        {"output-file", required_argument, 0, 'o'},
-        {"overwrite", no_argument, 0, 'f'},
-        {"verbose", no_argument, 0, 'v'},
-        {"version", no_argument, 0, 'V'},
-        {0, 0, 0, 0}};
+    static struct option long_options[] = {{"debug", no_argument, 0, 'd'},
+                                           {"help", no_argument, 0, 'h'},
+                                           {"csv", required_argument, 0, 'c'},
+                                           {"overwrite", no_argument, 0, 'f'},
+                                           {"verbose", no_argument, 0, 'v'},
+                                           {"version", no_argument, 0, 'V'},
+                                           {0, 0, 0, 0}};
 
     while (1) {
-        int c = getopt_long(argc, argv, "dho:fvV", long_options, 0);
+        int c = getopt_long(argc, argv, "dhc:fvV", long_options, 0);
         if (c == -1)
             break;
 
@@ -56,8 +55,8 @@ Options::Options(int argc, char *argv[])
         case 'h':
             print_help();
             std::exit(return_code_ok);
-        case 'o':
-            output_file = optarg;
+        case 'c':
+            csv_output_file = optarg;
             break;
         case 'f':
             overwrite_output = true;
@@ -85,8 +84,8 @@ Options::Options(int argc, char *argv[])
         std::exit(return_code_cmdline);
     }
 
-    if (output_file.empty()) {
-        std::cerr << "Missing --output-file/-o option.\n";
+    if (csv_output_file.empty()) {
+        std::cerr << "Missing --csv/-c option.\n";
         std::exit(return_code_cmdline);
     }
 
@@ -101,7 +100,7 @@ void Options::print_help() const
               << "  -d, --debug                - Enable debugging output\n"
               << "  -f, --overwrite            - Overwrite output file if it "
                  "already exists\n"
-              << "  -o, --output-file=FILE     - file for output\n"
+              << "  -c, --csv=FILE             - file for csv output\n"
               << "  -v, --verbose              - Verbose output\n"
               << "  -V, --version              - Show version and exit\n"
               << "\n";
