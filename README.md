@@ -43,9 +43,9 @@ in the `doc/html` directory.
 
 ## Running
 1. Filter the planet with osmborder_filter
-  ```sh
-  osmborder_filter -o filtered.osm.pbf planet-latest.osm.pbf
-  ```
+```sh
+osmborder_filter -o filtered.osm.pbf planet-latest.osm.pbf
+```
 2. Create linestrings with osmborder
 ```sh
 osmborder -o osmborder_lines.csv filtered.osm.pbf
