@@ -10,7 +10,7 @@ all the pieces into linestrings for use in map renderers etc.
 
     https://github.com/osmcode/libosmium
     http://osmcode.org/libosmium
-    At least version 2.5.0 is needed.
+    At least version 2.7.0 is needed.
 
 ### zlib (for PBF support)
 
