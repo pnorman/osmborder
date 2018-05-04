@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
         reader.close();
         vout << memory_usage();
     }
-    typedef osmium::index::map::SparseMmapArray<osmium::unsigned_object_id_type,
+    typedef osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type,
                                                 osmium::Location>
         index_type;
     typedef SpecificNodeLocationsForWays<index_type> location_handler_type;
