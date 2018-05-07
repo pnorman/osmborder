@@ -27,6 +27,7 @@ all the pieces into linestrings for use in map renderers etc.
 ## Building
 
 You'll need the prerequisites including `libosmium` installed.
+Libosmium is search in the folders mentioned in https://github.com/pnorman/osmborder/blob/master/cmake/FindOsmium.cmake#L59
 
 OSMBorder uses CMake for building:
 
