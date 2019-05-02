@@ -150,13 +150,15 @@ public:
                                        parent_admin_levels.end()) !=
                     parent_admin_levels.end();
 
+               const std::string linestring = m_factory.create_linestring(way);
+
                 m_out << way.id() << "\t"
                       // parent_admin_levels is already escaped.
                       << min_parent_admin_level << "\t"
                       << ((dividing_line) ? ("true") : ("false")) << "\t"
                       << ((disputed) ? ("true") : ("false")) << "\t"
                       << ((maritime) ? ("true") : ("false")) << "\t"
-                      << m_factory.create_linestring(way) << "\n";
+                      << linestring << "\n";
             } catch (osmium::geometry_error &e) {
                 std::cerr << "Geometry error on way " << way.id() << ": "
                           << e.what() << "\n";
