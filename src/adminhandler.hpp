@@ -150,7 +150,8 @@ public:
                                        parent_admin_levels.end()) !=
                     parent_admin_levels.end();
 
-               const std::string linestring = m_factory.create_linestring(way);
+                // Convert here to ensure errors don't result in partial output lines.
+                const std::string linestring = m_factory.create_linestring(way);
 
                 m_out << way.id() << "\t"
                       // parent_admin_levels is already escaped.
