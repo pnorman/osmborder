@@ -60,6 +60,8 @@ CREATE TABLE osmborder_lines (
   admin_level int,
   dividing_line bool,
   disputed bool,
+  disputed_by varchar[],
+  claimed_by varchar[],
   maritime bool,
   way Geometry(LineString, 3857));
 \copy osmborder_lines FROM osmborder_lines.csv
@@ -82,6 +84,12 @@ The admin_level is the lowest `admin_level` value of the parent relations. The w
 
 ### disputed
 The presence of `disputed=yes`, `dispute=yes`, `border_status=dispute` or `disputed_by=*` on the ways is used to indicate part of a border is disputed. All the tags function the same, but `disputed=yes` is my preference. Relation tags are not considered.
+
+### disputed_by
+Array of country codes not recognizing this boundary from the ways `disputed_by`.
+
+### claimed_by
+Array of country codes claiming this boundary from the relations `claimed_by`.
 
 ### maritime
 `maritime=yes` or `natural=coastline` indicates a maritime border for the purposes of rendering. Relations are not considered, nor intersection with water areas.

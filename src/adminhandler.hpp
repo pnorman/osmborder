@@ -21,6 +21,43 @@
 
 */
 #include <osmium/geom/mercator_projection.hpp>
+#include "util.hpp"
+
+void split(std::vector<std::string> & v, std::string s)
+{
+    std::istringstream iss(s);
+    std::string token;
+    while (std::getline(iss, token, ';')) {
+        v.push_back(trim(token));
+    }
+}
+
+template<typename T>
+std::string serialize_array(T begin, T end, const std::string & separator = ",")
+{
+
+    std::ostringstream ss;
+    ss << "{";
+
+    if(begin != end) {
+        std::string part = *begin++;
+        // Remove quote char
+        part.erase(std::remove(part.begin(), part.end(), '\''), part.end());
+
+        ss << part;
+    }
+
+    while(begin != end) {
+        std::string part = *begin++;
+        // Remove quote char
+        part.erase(std::remove(part.begin(), part.end(), '\''), part.end());
+
+        ss << separator << part;
+    }
+
+    ss << "}";
+    return ss.str();
+}
 
 class AdminHandler : public osmium::handler::Handler
 {
@@ -114,6 +151,8 @@ public:
     {
         std::vector<int> parent_admin_levels;
         bool disputed = false;
+        std::vector<std::string> disputed_by;
+        std::vector<std::string> claimed_by;
         bool maritime = false;
 
         // Tags on the way itself
@@ -121,6 +160,11 @@ public:
         disputed = disputed || way.tags().has_tag("dispute", "yes");
         disputed = disputed || way.tags().has_tag("border_status", "dispute");
         disputed = disputed || way.tags().has_key("disputed_by");
+        disputed = disputed || way.tags().has_tag("boundary", "disputed");
+
+        split(disputed_by, way.tags().get_value_by_key("disputed_by", ""));
+        std::sort(disputed_by.begin(), disputed_by.end());
+        std::unique(disputed_by.begin(), disputed_by.end());
 
         maritime = maritime || way.tags().has_tag("maritime", "yes");
         maritime = maritime || way.tags().has_tag("natural", "coastline");
@@ -136,6 +180,24 @@ public:
             if (admin_it != admin_levels.end()) {
                 parent_admin_levels.push_back(admin_it->second);
             }
+
+            split(claimed_by, tags.get_value_by_key("claimed_by", ""));
+        }
+
+        if (claimed_by.size() > 0) {
+            // Make claimed_by uniq
+            std::sort(claimed_by.begin(), claimed_by.end());
+            std::unique(claimed_by.begin(), claimed_by.end());
+
+            // If boundary if disputed_by and territory claimed_by
+            // ignore claimed_by, we are already inside the territory
+            // eg. claimed enclave
+            // claimed_by -= disputed_by
+            std::vector<std::string> claimed_by_tmp;
+            std::set_difference(claimed_by.begin(), claimed_by.end(),
+                                disputed_by.begin(), disputed_by.end(),
+                                std::inserter(claimed_by_tmp, claimed_by_tmp.begin()));
+            std::swap(claimed_by, claimed_by_tmp);
         }
 
         if (parent_admin_levels.size() > 0) {
@@ -159,6 +221,8 @@ public:
                       << min_parent_admin_level << "\t"
                       << ((dividing_line) ? ("true") : ("false")) << "\t"
                       << ((disputed) ? ("true") : ("false")) << "\t"
+                      << serialize_array(disputed_by.begin(), disputed_by.end()) << "\t"
+                      << serialize_array(claimed_by.begin(), claimed_by.end()) << "\t"
                       << ((maritime) ? ("true") : ("false")) << "\t"
                       << linestring << "\n";
             } catch (osmium::geometry_error &e) {
@@ -170,7 +234,9 @@ public:
 
     void relation(const osmium::Relation &relation)
     {
-        if (relation.tags().has_tag("boundary", "administrative")) {
+        if (relation.tags().has_tag("boundary", "administrative") ||
+            relation.tags().has_tag("boundary", "claim") ||
+            relation.tags().has_tag("boundary", "disputed")) {
             m_relations_buffer.add_item(relation);
             auto relation_offset = m_relations_buffer.commit();
             for (const auto &rm : relation.members()) {

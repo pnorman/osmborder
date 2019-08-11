@@ -24,6 +24,9 @@
 
 #include <memory>
 #include <type_traits>
+#include <algorithm>
+#include <functional>
+#include <string>
 
 template <typename R, typename T>
 std::unique_ptr<R> make_unique_ptr_clone(const T *source)
@@ -39,6 +42,28 @@ std::unique_ptr<TDerived> static_cast_unique_ptr(std::unique_ptr<TBase> &&ptr)
     static_assert(std::is_base_of<TBase, TDerived>::value,
                   "TDerived must be derived from TBase");
     return std::unique_ptr<TDerived>(static_cast<TDerived *>(ptr.release()));
+}
+
+// From https://stackoverflow.com/a/29185584
+std::string& ltrim(std::string& s)
+{
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+    std::ptr_fun<int, int>(std::isgraph)));
+  return s;
+}
+
+// From https://stackoverflow.com/a/29185584
+std::string& rtrim(std::string& s)
+{
+  s.erase(std::find_if(s.rbegin(), s.rend(),
+    std::ptr_fun<int, int>(std::isgraph)).base(), s.end());
+  return s;
+}
+
+// From https://stackoverflow.com/a/29185584
+std::string& trim(std::string& s)
+{
+  return ltrim(rtrim(s));
 }
 
 #endif // UTIL_HPP
