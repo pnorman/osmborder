@@ -120,6 +120,7 @@ public:
         disputed = disputed || way.tags().has_tag("disputed", "yes");
         disputed = disputed || way.tags().has_tag("dispute", "yes");
         disputed = disputed || way.tags().has_tag("border_status", "dispute");
+        disputed = disputed || way.tags().has_key("disputed_by");
 
         maritime = maritime || way.tags().has_tag("maritime", "yes");
         maritime = maritime || way.tags().has_tag("natural", "coastline");
