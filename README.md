@@ -80,6 +80,10 @@ relation members.
 
 The admin_level is the lowest `admin_level` value of the parent relations. The way tags are not considered.
 
+### dividing_line
+
+If the two parents are the same admin level.
+
 ### disputed
 The presence of `disputed=yes`, `dispute=yes`, or `border_status=dispute` on the ways is used to indicate part of a border is disputed. All the tags function the same, but `disputed=yes` is my preference. Relation tags are not considered.
 
