@@ -150,6 +150,7 @@ public:
     void way(const osmium::Way &way)
     {
         std::vector<int> parent_admin_levels;
+        bool neutral = false;
         bool disputed = false;
         std::vector<std::string> disputed_by;
         std::vector<std::string> claimed_by;
@@ -174,6 +175,10 @@ public:
             const osmium::TagList &tags =
                 m_relations_buffer.get<const osmium::Relation>(rel_offset)
                     .tags();
+
+            // The way is atleast in one relation of non disputed boundary
+            neutral = neutral || tags.has_tag("boundary", "administrative");
+
             const char *admin_level = tags.get_value_by_key("admin_level", "");
             /* can't use admin_levels[] because [] is non-const, but there must be a better way? */
             auto admin_it = admin_levels.find(admin_level);
@@ -220,6 +225,7 @@ public:
                       // parent_admin_levels is already escaped.
                       << min_parent_admin_level << "\t"
                       << ((dividing_line) ? ("true") : ("false")) << "\t"
+                      << ((neutral) ? ("true") : ("false")) << "\t"
                       << ((disputed) ? ("true") : ("false")) << "\t"
                       << serialize_array(disputed_by.begin(), disputed_by.end()) << "\t"
                       << serialize_array(claimed_by.begin(), claimed_by.end()) << "\t"
