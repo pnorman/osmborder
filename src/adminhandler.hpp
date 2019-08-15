@@ -179,6 +179,9 @@ public:
             // The way is atleast in one relation of non disputed boundary
             neutral = neutral || tags.has_tag("boundary", "administrative");
 
+            // Also mark the way as disputed if is in claimed relation
+            disputed = disputed || tags.has_tag("boundary", "claim");
+
             const char *admin_level = tags.get_value_by_key("admin_level", "");
             /* can't use admin_levels[] because [] is non-const, but there must be a better way? */
             auto admin_it = admin_levels.find(admin_level);

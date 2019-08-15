@@ -88,7 +88,8 @@ The admin_level is the lowest `admin_level` value of the parent relations. The w
 The border is in the default netral point of view.
 
 ### disputed
-The presence of `disputed=yes`, `dispute=yes`, `border_status=dispute` or `disputed_by=*` on the ways is used to indicate part of a border is disputed. All the tags function the same, but `disputed=yes` is my preference. Relation tags are not considered.
+The presence of `disputed=yes`, `dispute=yes`, `border_status=dispute` or `disputed_by=*` on the ways is used to indicate part of a border is disputed. All the tags function the same, but `disputed=yes` is my preference.
+Also mark as disputed if part of a claimend relation.
 
 ### disputed_by
 Array of country codes not recognizing this boundary from the ways `disputed_by`.
