@@ -23,35 +23,42 @@
 #include <osmium/geom/mercator_projection.hpp>
 #include "util.hpp"
 
+template <typename T>
+void remove_duplicates(std::vector<T>& vec)
+{
+    std::sort(vec.begin(), vec.end());
+    vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
+}
+
 void split(std::vector<std::string> & v, std::string s)
 {
     std::istringstream iss(s);
     std::string token;
     while (std::getline(iss, token, ';')) {
-        v.push_back(trim(token));
+        std::string trim_token = token;
+        // Remove quote char
+        trim_token.erase(std::remove(trim_token.begin(), trim_token.end(), '\''), trim_token.end());
+        trim_token = trim(token);
+
+        if (!trim_token.empty()) {
+            v.push_back(trim_token);
+        }
     }
 }
 
 template<typename T>
 std::string serialize_array(T begin, T end, const std::string & separator = ",")
 {
-
     std::ostringstream ss;
     ss << "{";
 
     if(begin != end) {
         std::string part = *begin++;
-        // Remove quote char
-        part.erase(std::remove(part.begin(), part.end(), '\''), part.end());
-
         ss << part;
     }
 
     while(begin != end) {
         std::string part = *begin++;
-        // Remove quote char
-        part.erase(std::remove(part.begin(), part.end(), '\''), part.end());
-
         ss << separator << part;
     }
 
@@ -193,9 +200,7 @@ public:
         }
 
         if (claimed_by.size() > 0) {
-            // Make claimed_by uniq
-            std::sort(claimed_by.begin(), claimed_by.end());
-            std::unique(claimed_by.begin(), claimed_by.end());
+            remove_duplicates(claimed_by);
 
             // If boundary if disputed_by and territory claimed_by
             // ignore claimed_by, we are already inside the territory
