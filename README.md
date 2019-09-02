@@ -81,7 +81,7 @@ relation members.
 The admin_level is the lowest `admin_level` value of the parent relations. The way tags are not considered.
 
 ### disputed
-The presence of `disputed=yes`, `dispute=yes`, or `border_status=dispute` on the ways is used to indicate part of a border is disputed. All the tags function the same, but `disputed=yes` is my preference. Relation tags are not considered.
+The presence of `disputed=yes`, `dispute=yes`, `border_status=dispute` or `disputed_by=*` on the ways is used to indicate part of a border is disputed. All the tags function the same, but `disputed=yes` is my preference. Relation tags are not considered.
 
 ### maritime
 `maritime=yes` or `natural=coastline` indicates a maritime border for the purposes of rendering. Relations are not considered, nor intersection with water areas.
