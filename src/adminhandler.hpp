@@ -124,6 +124,7 @@ public:
 
         maritime = maritime || way.tags().has_tag("maritime", "yes");
         maritime = maritime || way.tags().has_tag("natural", "coastline");
+        maritime = maritime || way.tags().has_tag("boundary_type", "maritime");
 
         // Tags on the parent relations
         for (const auto &rel_offset : m_way_rels[way.id()]) {
