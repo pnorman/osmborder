@@ -133,7 +133,9 @@ int main(int argc, char *argv[])
                 osmium::io::make_input_iterator_range<const osmium::Relation>(
                     reader);
             for (const osmium::Relation &relation : relations) {
-                if (relation.tags().has_tag("boundary", "administrative")) {
+                if (relation.tags().has_tag("boundary", "administrative") ||
+                    relation.tags().has_tag("boundary", "claim") ||
+                    relation.tags().has_tag("boundary", "disputed")) {
                     *output_it++ = relation;
                     for (const auto &rm : relation.members()) {
                         if (rm.type() == osmium::item_type::way) {

@@ -21,6 +21,50 @@
 
 */
 #include <osmium/geom/mercator_projection.hpp>
+#include "util.hpp"
+
+template <typename T>
+void remove_duplicates(std::vector<T>& vec)
+{
+    std::sort(vec.begin(), vec.end());
+    vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
+}
+
+void split(std::vector<std::string> & v, std::string s)
+{
+    std::istringstream iss(s);
+    std::string token;
+    while (std::getline(iss, token, ';')) {
+        std::string trim_token = token;
+        // Remove quote char
+        trim_token.erase(std::remove(trim_token.begin(), trim_token.end(), '\''), trim_token.end());
+        trim_token = trim(token);
+
+        if (!trim_token.empty()) {
+            v.push_back(trim_token);
+        }
+    }
+}
+
+template<typename T>
+std::string serialize_array(T begin, T end, const std::string & separator = ",")
+{
+    std::ostringstream ss;
+    ss << "{";
+
+    if(begin != end) {
+        std::string part = *begin++;
+        ss << part;
+    }
+
+    while(begin != end) {
+        std::string part = *begin++;
+        ss << separator << part;
+    }
+
+    ss << "}";
+    return ss.str();
+}
 
 class AdminHandler : public osmium::handler::Handler
 {
@@ -113,7 +157,10 @@ public:
     void way(const osmium::Way &way)
     {
         std::vector<int> parent_admin_levels;
+        bool neutral = false;
         bool disputed = false;
+        std::vector<std::string> disputed_by;
+        std::vector<std::string> claimed_by;
         bool maritime = false;
 
         // Tags on the way itself
@@ -121,6 +168,11 @@ public:
         disputed = disputed || way.tags().has_tag("dispute", "yes");
         disputed = disputed || way.tags().has_tag("border_status", "dispute");
         disputed = disputed || way.tags().has_key("disputed_by");
+        disputed = disputed || way.tags().has_tag("boundary", "disputed");
+
+        split(disputed_by, way.tags().get_value_by_key("disputed_by", ""));
+        std::sort(disputed_by.begin(), disputed_by.end());
+        std::unique(disputed_by.begin(), disputed_by.end());
 
         maritime = maritime || way.tags().has_tag("maritime", "yes");
         maritime = maritime || way.tags().has_tag("natural", "coastline");
@@ -131,12 +183,35 @@ public:
             const osmium::TagList &tags =
                 m_relations_buffer.get<const osmium::Relation>(rel_offset)
                     .tags();
+
+            // The way is atleast in one relation of non disputed boundary
+            neutral = neutral || tags.has_tag("boundary", "administrative");
+
+            // Also mark the way as disputed if is in claimed relation
+            disputed = disputed || tags.has_tag("boundary", "claim");
+
             const char *admin_level = tags.get_value_by_key("admin_level", "");
             /* can't use admin_levels[] because [] is non-const, but there must be a better way? */
             auto admin_it = admin_levels.find(admin_level);
             if (admin_it != admin_levels.end()) {
                 parent_admin_levels.push_back(admin_it->second);
             }
+
+            split(claimed_by, tags.get_value_by_key("claimed_by", ""));
+        }
+
+        if (claimed_by.size() > 0) {
+            remove_duplicates(claimed_by);
+
+            // If boundary if disputed_by and territory claimed_by
+            // ignore claimed_by, we are already inside the territory
+            // eg. claimed enclave
+            // claimed_by -= disputed_by
+            std::vector<std::string> claimed_by_tmp;
+            std::set_difference(claimed_by.begin(), claimed_by.end(),
+                                disputed_by.begin(), disputed_by.end(),
+                                std::inserter(claimed_by_tmp, claimed_by_tmp.begin()));
+            std::swap(claimed_by, claimed_by_tmp);
         }
 
         if (parent_admin_levels.size() > 0) {
@@ -159,7 +234,10 @@ public:
                       // parent_admin_levels is already escaped.
                       << min_parent_admin_level << "\t"
                       << ((dividing_line) ? ("true") : ("false")) << "\t"
+                      << ((neutral) ? ("true") : ("false")) << "\t"
                       << ((disputed) ? ("true") : ("false")) << "\t"
+                      << serialize_array(disputed_by.begin(), disputed_by.end()) << "\t"
+                      << serialize_array(claimed_by.begin(), claimed_by.end()) << "\t"
                       << ((maritime) ? ("true") : ("false")) << "\t"
                       << linestring << "\n";
             } catch (osmium::geometry_error &e) {
@@ -171,7 +249,9 @@ public:
 
     void relation(const osmium::Relation &relation)
     {
-        if (relation.tags().has_tag("boundary", "administrative")) {
+        if (relation.tags().has_tag("boundary", "administrative") ||
+            relation.tags().has_tag("boundary", "claim") ||
+            relation.tags().has_tag("boundary", "disputed")) {
             m_relations_buffer.add_item(relation);
             auto relation_offset = m_relations_buffer.commit();
             for (const auto &rm : relation.members()) {
